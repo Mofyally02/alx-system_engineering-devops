@@ -1,26 +1,24 @@
 #!/usr/bin/env bash
-# Configure Nginx server so that /redirect_me is redirecting to another page.
+# bash: script installs and configures Nginx web server
+# and redirects traffic:
 
-# Update system
-sudo apt-get -yqq update
+sudo apt-get update -y
+sudo apt-get install -y nginx
 
-# Install nginx
-sudo apt-get -y install nginx
+# configuring Nginx
+sudo sed -i 's/80 default_server/80/' /etc/nginx/sites-available/default
 
-# Change owner and permissions.
-sudo chown -R "$USER":"$USER" /var/www/html
-sudo chmod -R "0755" /var/www/html
+# creating index.html file served out by server:
+# & configuring the redirection
+echo 'Hello World!' > /etc/nginx/html/index.html
+printf %s "server {
+    listen 80;
+    listen [::]:80 default_server;
+    root   /etc/nginx/html;
+    index  index.html index.htm;
+    location /redirect_me {
+        return 301 https://stackoverflow.com/;
+    }
+}" > /etc/nginx/sites-available/default
 
-# Write new index file
-echo "Hello World!" > /var/www/html/index.html
-
-# String to add to the config file.
-string='\n\t# Redirect /redirect_me path to youtube.\n\trewrite ^/redirect_me/?$ https://www.youtube.com/watch?v=QH2-TGUlwu4 permanent;\n}'
-
-# Add string at the end of the server config.
-sudo sed -i s~'^}$'~"${string}"~ /etc/nginx/sites-available/default
-
-# Restart the nginx service
-sudo service nginx restart
-
-echo "Successfully started nginx"
+service nginx restart
