@@ -1,17 +1,30 @@
-# Creates custom HTTP response header "X-Served-By"
+# Setup New Ubuntu server with nginx
+# and add a custom HTTP header
 
-include stdlib
-
-$line = '        add_header X-Served-By $hostname always;'
-
-file_line { 'add_header':
-  ensure => present,
-  line   => $line,
-  after  => '^http {',
-  path   => '/etc/nginx/nginx.conf',
-  notify => Service['nginx'],
+exec { 'update system':
+        command => '/usr/bin/apt-get update',
 }
 
-service { 'nginx':
-  ensure => running,
+package { 'nginx':
+	ensure => 'installed',
+	require => Exec['update system']
+}
+
+file {'/var/www/html/index.html':
+	content => 'Hello World!'
+}
+
+exec {'redirect_me':
+	command => 'sed -i "24i\	rewrite ^/redirect_me https://noahgs.tech/ permanent;" /etc/nginx/sites-available/default',
+	provider => 'shell'
+}
+
+exec {'HTTP header':
+	command => 'sed -i "25i\	add_header X-Served-By \$hostname;" /etc/nginx/sites-available/default',
+	provider => 'shell'
+}
+
+service {'nginx':
+	ensure => running,
+	require => Package['nginx']
 }
