@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-""" grabbing users data using given api"""
+"""grabbing users data using given api"""
 
 import requests as req
 import sys
